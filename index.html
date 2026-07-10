@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - TRS Adventure</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* --- Gaya Navbar --- */
+        .navbar {
+            background-color: #2c3e50;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .nav-btn {
+            background-color: transparent;
+            color: #bdc3c7;
+            border: 2px solid transparent;
+            padding: 8px 16px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        .nav-btn:hover {
+            color: #fff;
+        }
+        .nav-btn.active {
+            color: #fff;
+            border-bottom: 2px solid #3498db;
+        }
+
+        /* --- Gaya Kontainer --- */
+        .container {
+            max-width: 950px; /* Diperlebar sedikit agar tabel database lebih lega */
+            margin: 0 auto 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .hidden {
+            display: none;
+        }
+        
+        /* --- Gaya Header Invoice --- */
+        .invoice-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .logo-area {
+            flex: 0 0 180px;
+        }
+        .logo-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100px;
+            border: 2px dashed #bdc3c7;
+            color: #7f8c8d;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-align: center;
+            padding: 10px;
+        }
+        .logo-label:hover {
+            background-color: #f8f9fa;
+            border-color: #3498db;
+            color: #3498db;
+        }
+        #logoPreview {
+            max-width: 100%;
+            max-height: 120px;
+            display: none;
+            object-fit: contain;
+        }
+        .company-info {
+            text-align: right;
+            flex: 1;
+        }
+        .company-info h1 {
+            color: #2c3e50;
+            margin: 0 0 5px 0;
+            font-size: 28px;
+        }
+        .company-info p {
+            color: #7f8c8d;
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* --- Form dan Tabel --- */
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #34495e;
+        }
+        input[type="text"], input[type="date"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #bdc3c7;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #34495e;
+            color: white;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #ecf0f1;
+        }
+        
+        /* --- Gaya Tombol --- */
+        .btn {
+            background-color: #2980b9;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover { background-color: #3498db; }
+        .btn-print { background-color: #27ae60; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        .btn-print:hover { background-color: #2ecc71; }
+        .btn-save { background-color: #f39c12; }
+        .btn-save:hover { background-color: #f1c40f; }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            padding: 5px 10px;
+            font-size: 14px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .btn-danger:hover { background-color: #c0392b; }
+        
+        .btn-danger-sm {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .btn-danger-sm:hover { background-color: #c0392b; }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .action-group {
+            display: flex;
+            gap: 5px;
+        }
+        
+        /* --- Pengaturan Khusus Print --- */
+        @media print {
+            body { background-color: white; padding: 0; }
+            .navbar, .no-print { display: none !important; }
+            .container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+            input {
+                border: none;
+                background: transparent;
+                padding: 0;
+                font-family: inherit;
+                font-size: inherit;
+                color: inherit;
+            }
+            input:focus { outline: none; }
+            th.no-print, td.no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar no-print">
+    <button class="nav-btn active" id="nav-invoice" onclick="switchTab('invoice')">📝 Buat Invoice</button>
+    <button class="nav-btn" id="nav-database" onclick="switchTab('database')">🗃️ Database Transaksi</button>
+</nav>
+
+<!-- TAB 1: FORM INVOICE -->
+<div class="container" id="tab-invoice">
+    
+    <!-- HEADER INVOICE: LOGO DAN INFO -->
+    <div class="invoice-header">
+        <div class="logo-area">
+            <label for="logoUpload" class="logo-label no-print" id="logoUploadLabel">
+                📷 Klik di sini<br>untuk Upload Logo
+            </label>
+            <input type="file" id="logoUpload" accept="image/*" style="display: none;" onchange="previewLogo(event)">
+            <img id="logoPreview" src="" alt="Logo TRS Adventure">
+        </div>
+        <div class="company-info">
+            <h1>TRS ADVENTURE</h1>
+            <p>
+                Perum Dago Village F2 Rt 03 Rw 11 Desa Sukajaya<br>
+                Kec. Sumedang Selatan 45311<br>
+                Telp. 085220132008
+            </p>
+        </div>
+    </div>
+
+    <h2 style="text-transform: uppercase;">Invoice / Nota Bon</h2>
+
+    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+        <div style="width: 48%;">
+            <div class="form-group">
+                <label>Nomor Invoice:</label>
+                <input type="text" id="noInvoice" placeholder="Contoh: INV-202607-001">
+            </div>
+            <div class="form-group">
+                <label>Tanggal:</label>
+                <input type="date" id="tanggal">
+            </div>
+        </div>
+        <div style="width: 48%;">
+            <div class="form-group">
+                <label>Nama Pelanggan / Grup:</label>
+                <input type="text" id="namaPelanggan" placeholder="Masukkan nama pelanggan">
+            </div>
+            <div class="form-group">
+                <label>No. HP / Kontak:</label>
+                <input type="text" id="kontakPelanggan" placeholder="Masukkan nomor HP">
+            </div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Deskripsi Paket Wisata</th>
+                <th width="15%">Jumlah (Pax)</th>
+                <th width="20%">Harga Satuan (Rp)</th>
+                <th width="20%">Subtotal (Rp)</th>
+                <th width="5%" class="no-print" style="text-align:center;">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="itemTable">
+            <tr>
+                <td><input type="text" placeholder="Contoh: Paket Rafting & Outbound"></td>
+                <td><input type="number" class="qty" value="1" min="1" onchange="calculateTotal()"></td>
+                <td><input type="number" class="price" value="0" min="0" onchange="calculateTotal()"></td>
+                <td class="subtotal">0</td>
+                <td class="no-print" style="text-align: center;">
+                    <button class="btn-danger-sm" onclick="deleteItem(this)" title="Hapus Baris">X</button>
+                </td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="3" style="text-align: right;">GRAND TOTAL</td>
+                <td id="grandTotal">Rp 0</td>
+                <td class="no-print"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="no-print">
+        <button class="btn" onclick="addItem()">+ Tambah Baris Paket</button>
+        
+        <div class="action-buttons">
+            <button class="btn btn-save" onclick="saveTransaction()" style="flex: 1;">💾 Simpan ke Database</button>
+            <button class="btn btn-print" style="padding: 10px 20px; font-size: 16px;" onclick="window.print()" style="flex: 1;">🖨️ Cetak / Simpan PDF</button>
+        </div>
+    </div>
+    
+    <div style="margin-top: 50px; display: flex; justify-content: space-between; text-align: center;">
+        <div style="width: 30%;">
+            <p>Hormat Kami,</p>
+            <br><br><br>
+            <p><strong>TRS Adventure</strong></p>
+        </div>
+        <div style="width: 30%;">
+            <p>Pelanggan,</p>
+            <br><br><br>
+            <p><strong>( .................................... )</strong></p>
+        </div>
+    </div>
+</div>
+
+<!-- TAB 2: DATABASE TRANSAKSI -->
+<div class="container hidden no-print" id="tab-database">
+    <h2>Database Riwayat Transaksi</h2>
+    <p style="text-align:center; color:#7f8c8d;">Data di bawah ini tersimpan secara lokal di browser Anda.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th width="12%">Tanggal</th>
+                <th width="15%">No. Invoice</th>
+                <th width="15%">Pelanggan</th>
+                <th width="30%">Uraian Pesanan</th> <!-- Kolom Baru -->
+                <th width="15%">Total (Rp)</th>
+                <th width="13%" style="text-align: center;">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="dbTableBody">
+            <!-- Data Transaksi akan muncul di sini -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // --- Fitur Logo ---
+    function previewLogo(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgPreview = document.getElementById('logoPreview');
+                const labelUpload = document.getElementById('logoUploadLabel');
+                imgPreview.src = e.target.result;
+                imgPreview.style.display = 'block';
+                labelUpload.style.display = 'none';
+                localStorage.setItem('trs_logo', e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // --- Inisialisasi ---
+    window.onload = function() {
+        document.getElementById('tanggal').valueAsDate = new Date();
+        loadDatabase();
+        
+        const savedLogo = localStorage.getItem('trs_logo');
+        if (savedLogo) {
+            const imgPreview = document.getElementById('logoPreview');
+            const labelUpload = document.getElementById('logoUploadLabel');
+            imgPreview.src = savedLogo;
+            imgPreview.style.display = 'block';
+            labelUpload.style.display = 'none';
+        }
+    };
+
+    function switchTab(tabName) {
+        document.getElementById('tab-invoice').classList.add('hidden');
+        document.getElementById('tab-database').classList.add('hidden');
+        
+        document.getElementById('nav-invoice').classList.remove('active');
+        document.getElementById('nav-database').classList.remove('active');
+        
+        document.getElementById('tab-' + tabName).classList.remove('hidden');
+        document.getElementById('nav-' + tabName).classList.add('active');
+
+        if(tabName === 'database') loadDatabase();
+    }
+
+    // --- Logic Invoice ---
+    function addItem() {
+        const tbody = document.getElementById('itemTable');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" placeholder="Deskripsi tambahan..."></td>
+            <td><input type="number" class="qty" value="1" min="1" onchange="calculateTotal()"></td>
+            <td><input type="number" class="price" value="0" min="0" onchange="calculateTotal()"></td>
+            <td class="subtotal">0</td>
+            <td class="no-print" style="text-align: center;">
+                <button class="btn-danger-sm" onclick="deleteItem(this)" title="Hapus Baris">X</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+    
+    function deleteItem(btn) {
+        const tbody = document.getElementById('itemTable');
+        const row = btn.closest('tr');
+        
+        if (tbody.children.length > 1) {
+            row.remove();
+            calculateTotal();
+        } else {
+            alert("Tidak bisa menghapus! Minimal harus ada 1 baris pesanan dalam invoice.");
+            row.querySelector('input[type="text"]').value = '';
+            row.querySelector('.qty').value = 1;
+            row.querySelector('.price').value = 0;
+            calculateTotal();
+        }
+    }
+
+    function calculateTotal() {
+        const rows = document.querySelectorAll('#itemTable tr');
+        let grandTotal = 0;
+
+        rows.forEach(row => {
+            const qty = row.querySelector('.qty').value;
+            const price = row.querySelector('.price').value;
+            const subtotal = qty * price;
+            row.querySelector('.subtotal').innerText = new Intl.NumberFormat('id-ID').format(subtotal);
+            grandTotal += subtotal;
+        });
+
+        document.getElementById('grandTotal').innerText = 'Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal);
+        return grandTotal; 
+    }
+
+    // --- Database ---
+    function saveTransaction() {
+        const noInvoice = document.getElementById('noInvoice').value;
+        const tanggal = document.getElementById('tanggal').value;
+        const namaPelanggan = document.getElementById('namaPelanggan').value;
+        const kontakPelanggan = document.getElementById('kontakPelanggan').value;
+        const totalTransaksi = calculateTotal();
+
+        if (!noInvoice || !namaPelanggan) {
+            alert("Harap isi Nomor Invoice dan Nama Pelanggan sebelum menyimpan!");
+            return;
+        }
+        if (totalTransaksi === 0) {
+            alert("Nominal transaksi masih 0. Harap isi harga paket!");
+            return;
+        }
+
+        // Kumpulkan semua item yang diinput untuk disimpan
+        const rows = document.querySelectorAll('#itemTable tr');
+        let itemsData = [];
+        rows.forEach(row => {
+            const desc = row.querySelector('input[type="text"]').value;
+            const qty = row.querySelector('.qty').value;
+            const price = row.querySelector('.price').value;
+            if(desc.trim() !== "") {
+                itemsData.push({ desc, qty, price });
+            }
+        });
+
+        const transaksiBaru = {
+            id: Date.now(), 
+            noInvoice: noInvoice,
+            tanggal: tanggal,
+            namaPelanggan: namaPelanggan,
+            kontakPelanggan: kontakPelanggan,
+            items: itemsData,
+            total: totalTransaksi
+        };
+
+        let dbRiwayat = JSON.parse(localStorage.getItem('trs_database')) || [];
+        dbRiwayat.push(transaksiBaru);
+        localStorage.setItem('trs_database', JSON.stringify(dbRiwayat));
+
+        alert("Berhasil! Transaksi beserta rincian pesanan telah disimpan ke Database.");
+        loadDatabase(); // Refresh database secara real-time
+    }
+
+    function loadDatabase() {
+        const dbTableBody = document.getElementById('dbTableBody');
+        dbTableBody.innerHTML = ''; 
+        
+        let dbRiwayat = JSON.parse(localStorage.getItem('trs_database')) || [];
+
+        if (dbRiwayat.length === 0) {
+            dbTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Belum ada data transaksi tersimpan.</td></tr>`;
+            return;
+        }
+
+        dbRiwayat.reverse().forEach(trx => {
+            const tr = document.createElement('tr');
+            const totalFormat = new Intl.NumberFormat('id-ID').format(trx.total);
+            
+            // Generate Uraian Pesanan dalam bentuk list HTML
+            let uraianHTML = '';
+            if (trx.items && trx.items.length > 0) {
+                uraianHTML = '<ul style="margin: 0; padding-left: 20px; font-size: 13px;">';
+                trx.items.forEach(item => {
+                    uraianHTML += `<li>${item.desc} (${item.qty} pax)</li>`;
+                });
+                uraianHTML += '</ul>';
+            } else {
+                uraianHTML = '<span style="color: #7f8c8d; font-style: italic; font-size: 13px;">Detail kosong</span>';
+            }
+            
+            tr.innerHTML = `
+                <td>${trx.tanggal}</td>
+                <td><strong>${trx.noInvoice}</strong></td>
+                <td>${trx.namaPelanggan}</td>
+                <td>${uraianHTML}</td>
+                <td>Rp ${totalFormat}</td>
+                <td>
+                    <div class="action-group">
+                        <button class="btn-print" style="padding: 5px 8px; font-size: 13px;" onclick="printTransaction(${trx.id})" title="Cetak Ulang">🖨️ Cetak</button>
+                        <button class="btn btn-danger" style="padding: 5px 8px; font-size: 13px;" onclick="deleteTransaction(${trx.id})">Hapus</button>
+                    </div>
+                </td>
+            `;
+            dbTableBody.appendChild(tr);
+        });
+    }
+
+    function printTransaction(id) {
+        let dbRiwayat = JSON.parse(localStorage.getItem('trs_database')) || [];
+        let trx = dbRiwayat.find(t => t.id === id);
+        
+        if (trx) {
+            document.getElementById('noInvoice').value = trx.noInvoice;
+            document.getElementById('tanggal').value = trx.tanggal;
+            document.getElementById('namaPelanggan').value = trx.namaPelanggan;
+            document.getElementById('kontakPelanggan').value = trx.kontakPelanggan || '';
+
+            const tbody = document.getElementById('itemTable');
+            tbody.innerHTML = ''; 
+            
+            if (!trx.items || trx.items.length === 0) {
+                addItem();
+            } else {
+                trx.items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><input type="text" placeholder="Deskripsi tambahan..." value="${item.desc}"></td>
+                        <td><input type="number" class="qty" value="${item.qty}" min="1" onchange="calculateTotal()"></td>
+                        <td><input type="number" class="price" value="${item.price}" min="0" onchange="calculateTotal()"></td>
+                        <td class="subtotal">0</td>
+                        <td class="no-print" style="text-align: center;">
+                            <button class="btn-danger-sm" onclick="deleteItem(this)" title="Hapus Baris">X</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            
+            calculateTotal();
+            switchTab('invoice');
+            
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        }
+    }
+
+    function deleteTransaction(id) {
+        if(confirm("Apakah Anda yakin ingin menghapus data transaksi ini?")) {
+            let dbRiwayat = JSON.parse(localStorage.getItem('trs_database')) || [];
+            dbRiwayat = dbRiwayat.filter(trx => trx.id !== id);
+            localStorage.setItem('trs_database', JSON.stringify(dbRiwayat));
+            loadDatabase(); 
+        }
+    }
+</script>
+
+</body>
+</html>
